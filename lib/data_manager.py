@@ -83,7 +83,7 @@ def read_mdb(input_file):
     """ Reads a Microsoft Data Base (mdb) file.
     """
     connection = connect('DRIVER={DRIVER};DBQ={DBQ};PWD={PWD}'.format(
-            DRIVER='{Linux Access Driver (*.mdb, *.accdb)}',
+            DRIVER='{Microsoft Access Driver (*.mdb, *.accdb)}',
             DBQ=Path(input_file),
             PWD='pw'))
     cursor = connection.cursor()

@@ -1,7 +1,7 @@
 # Configuration file for quality-control.
 
 [general]
-    input_file ='/home/rrealrangel/MEGA/datasets/imta_bandas/data/rh01/01002.mdb'
+    input_file='C:/Users/rreal/OneDrive/datasets/imta_bandas/data/corrientes/rh30/30057.mdb'
 
     [level_1_tests]
         # Tests performed on raw data.
@@ -10,6 +10,7 @@
         spikes_data_test = false
         change_rate_test = true
         flat_series_test = true
+        tmp_outlier_test = false
 
     [level_2_tests]
         # Tests performed in digested data.
