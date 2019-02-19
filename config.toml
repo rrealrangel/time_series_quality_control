@@ -2,7 +2,7 @@
 
 [general]
     input_dir='C:/Users/rreal/OneDrive/datasets/imta_bandas/data/corrientes'
-    output_dir='C:/Users/rreal/OneDrive/proyectos/2019/2019-inv-01_cathments-classification/main/time_series_quality_control/daily_streamflow'
+    output_dir='C:/Users/rreal/OneDrive/proyectos/2019/2019-inv-01_cathments-classification/main/analisys/time_series_quality_control/daily_streamflow'
 
 [level_1_tests]
     # Tests performed on raw data.

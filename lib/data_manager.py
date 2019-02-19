@@ -12,7 +12,30 @@ from pathlib2 import Path
 from pyodbc import connect
 import csv
 import numpy as np
+import sys
 import xarray as xr
+
+
+def load_dir(directory):
+    """
+    Parameters
+    ----------
+        directory: string
+            Full path of the directory to be loaded.
+    """
+    if not Path(directory).exists():
+        create_dir = raw_input(
+                "The directory '{}' does not exist.\n"
+                "Do you want to create it? [Y] Yes, [N] No. ".
+                format(directory))
+
+        if create_dir.lower() == 'y':
+            Path(directory).mkdir(parents=True, exist_ok=True)
+
+        else:
+            sys.exit("Cannot continue without this directory. Aborting.")
+
+    return(Path(directory))
 
 
 def list_inputs(input_dir):
