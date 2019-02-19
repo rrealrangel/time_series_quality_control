@@ -15,6 +15,10 @@ import numpy as np
 import xarray as xr
 
 
+def list_inputs(input_dir):
+    return(list(Path(input_dir).glob(pattern='**/*.mdb')))
+
+
 def slice_time_series(data, month):
     """Performs a slice from a dataset for a given month in the 'time'
         dimension.
@@ -82,6 +86,7 @@ def read_csv(input_file):
 def read_mdb(input_file):
     """ Reads a Microsoft Data Base (mdb) file.
     """
+    # TODO: Generalize thie function to read other data sources.
     connection = connect('DRIVER={DRIVER};DBQ={DBQ};PWD={PWD}'.format(
             DRIVER='{Microsoft Access Driver (*.mdb, *.accdb)}',
             DBQ=Path(input_file),

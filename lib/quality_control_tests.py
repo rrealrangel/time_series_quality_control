@@ -104,7 +104,7 @@ def range_test(input_ts, threshold=4.89164, climatology=True):
         return(input_ts.groupby('time.month').apply(func=zscore_check,
                threshold=threshold,
                left_tail=True,
-               right_tail=True))
+               right_tail=True).drop('month'))
 
     else:
         return(zscore_check(input_ts=input_ts, threshold=threshold))
@@ -144,7 +144,7 @@ def spikes_data_test(input_ts, threshold=4.89164, climatology=True):
                 func=zscore_check,
                 threshold=threshold,
                 left_tail=False,
-                right_tail=True))
+                right_tail=True).drop('month'))
 
     else:
         return(zscore_check(
@@ -190,7 +190,7 @@ def change_rate_test(input_ts, threshold=4.89164, climatology=True):
                 func=zscore_check,
                 threshold=threshold,
                 left_tail=False,
-                right_tail=True))
+                right_tail=True).drop('month'))
 
     else:
         return(zscore_check(
