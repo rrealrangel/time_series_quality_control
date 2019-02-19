@@ -67,5 +67,6 @@ for input_file in dmgr.list_inputs(settings['general']['input_dir']):
 
     X['main_filtered'] = X.main.copy()
     X.main_filtered[X['missing_suspect_value']] = np.nan
-
-
+    output_subdir = dmgr.load_dir(
+            settings['general']['output_dir'] + '/rh' + input_file.stem[:2])
+    X.to_netcdf(output_subdir / (input_file.stem + '.nc'))
