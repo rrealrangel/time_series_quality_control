@@ -139,6 +139,19 @@ def read_mdb(input_file):
 
     values[values == ''] = np.nan
     values = values.astype(np.float)
+
+    # Remove the value of repeated dates.
+    repeated = np.unique([i for i in time if (time == i).sum() > 1])
+
+    if len(repeated) > 0:
+        indices = []
+
+        for i in repeated:
+            indices = indices + list(np.where(time == i)[0])
+
+        time = np.delete(time, indices)
+        values = np.delete(values, indices)
+
     X = xr.Dataset(
             data_vars={'main': (['time'], values)},
             coords={'time': time})
