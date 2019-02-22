@@ -29,7 +29,7 @@ def zscore_check(input_ts, threshold, left_tail=True, right_tail=True):
             times the standard deviation of the standardized time
             series.
             -----------------------------------------------------
-            Freq (y)       1T Prob.     1T Z-score     2T Z-score
+            Freq (y)          Prob.     1T Z-score     2T Z-score
                                        (threshold)    (threshold)
             -----------------------------------------------------
                    2       0.500000        0.00000        0.67449
@@ -232,6 +232,9 @@ def flat_series_test(input_ts, value_tolerance=0.0, repetitions_tolerance=2,
 
     invariant = invariant.reindex(
             time=sorted(input_ts.time.values)).astype('bool')
+
+    for i in range(0, repetitions_tolerance + 1):
+        input_ts.values[i] = False
 
     if skipzero:
         invariant[input_ts == 0] = False

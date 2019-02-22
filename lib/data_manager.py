@@ -10,7 +10,6 @@ License
 """
 from pathlib2 import Path
 from pyodbc import connect
-import csv
 import numpy as np
 import sys
 import xarray as xr
@@ -38,8 +37,8 @@ def load_dir(directory):
     return(Path(directory))
 
 
-def list_inputs(input_dir):
-    return(list(Path(input_dir).glob(pattern='**/*.mdb')))
+def list_inputs(input_dir, extension):
+    return(sorted(list(Path(input_dir).glob(pattern='**/*' + extension))))
 
 
 def slice_time_series(data, month):
@@ -63,53 +62,101 @@ def slice_time_series(data, month):
     return(data.isel(time=np.where(data.time.dt.month == month)[0]))
 
 
-def read_csv(input_file):
-    """ Reads a csv file and returns a xarray.DataArray with the time series.
+def read_bdcn_file(input_file):
+    """ Extracts data from files from the National Climatologic Data
+    Base (BDCN) of Mexico.
 
     Parameters
     ----------
         input_file: string
-            The path of the input csv file.
-
-    Returns
-    -------
-        data_array: xarray.DataArray
-            A xarray.DataArray containing the time series of the input_file.
+            The full path of the input file of the climatological records.
+        remove_lines: integer (default value is 2)
+            The number of lines that will be removed from the top of
+            the file.
     """
-    with open(Path(input_file), 'rb') as csvfile:
-        reader = csv.reader(csvfile, delimiter=',')
-        values = np.array([], dtype=np.float)
-        time = np.array([], dtype=np.datetime64)
+    def date_builder(row):
+        return(np.datetime64('-'.join([
+                str(row['YEAR']).zfill(4),
+                str(row['MONTH']).zfill(2),
+                str(row['DAY']).zfill(2)]) + ' 08:00'))
 
-        for row in reader:
-            year = row[0].zfill(4)
-            month = row[1].zfill(2)
+    # Import CSV file.
+    with open(str(input_file), 'r') as f:
+        raw_text = f.read()
 
-            for counter, value in enumerate(row[2:]):
-                stdtime = year + '-' + month + '-' + str(counter + 1).zfill(2)
+    raw_text = raw_text.replace('# ', '')
+    metadata_rows = [i.split(',') for i in raw_text.splitlines()[:2]]
+    variables = raw_text.splitlines()[2].split(',')
+    data_type = np.empty(shape=np.shape(variables), dtype='|S6')
 
-                try:
-                    time = np.append(time, np.datetime64(stdtime))
-                    values = np.append(values, value)
+    for i, var in enumerate(variables):
+        if (var == 'YEAR') or (var == 'MONTH') or (var == 'DAY'):
+            data_type[i] = 'int'
 
-                except ValueError:
-                    pass
+        else:
+            data_type[i] = 'f4'
 
-    values[values == ''] = np.nan
-    values = values.astype(np.float)
-    X = xr.DataArray(data=values, dims=['time'], coords={
-            'time': time})
+    data = np.genfromtxt(
+            fname=str(input_file),
+            delimiter=',',
+            skip_header=4,
+            dtype=data_type,
+            names=variables)
+    time = np.asarray([date_builder(row=i) for i in data])
+
+    # Remove the value of repeated dates.
+    repeated = np.unique([i for i in time if (time == i).sum() > 1])
+
+    if len(repeated) > 0:
+        indices = []
+
+        for i in repeated:
+            indices = indices + list(np.where(time == i)[0])
+
+        time = np.delete(time, indices)
+        data = np.delete(data, indices)
+
+    # Extract time series (ts).
+    prec = xr.DataArray(
+            data=data['PRECIP'],
+            coords={'time': time},
+            dims=['time'],
+            attrs={'units': 'mm'})
+    evap = xr.DataArray(
+            data=data['EVAP'],
+            coords={'time': time},
+            dims=['time'],
+            attrs={'units': 'mm'})
+    tmin = xr.DataArray(
+            data=data['TMIN'],
+            coords={'time': time},
+            dims=['time'],
+            attrs={'units': 'C'})
+    tmax = xr.DataArray(
+            data=data['TMAX'],
+            coords={'time': time},
+            dims=['time'],
+            attrs={'units': 'C'})
+
+    dataset = xr.Dataset(
+            data_vars={'precipitation': prec,
+                       'evaporation': evap,
+                       'temperature_min': tmin,
+                       'temperature_max': tmax},
+            attrs=dict(zip(metadata_rows[0], metadata_rows[1])))
 
     # Reindex to fill missing dates with nan.
     new_index = np.arange(
-            time[0], time[-1] + np.timedelta64(1, 'D'), np.timedelta64(1, 'D'))
-    return(X.reindex(time=new_index))
+            min(time), max(time) + np.timedelta64(1, 'D'),
+            np.timedelta64(1, 'D'))
+    return(dataset.reindex(time=new_index))
 
 
-def read_mdb(input_file):
-    """ Reads a Microsoft Data Base (mdb) file.
+def read_bandas_file(input_file):
+    """ Reads the daily discharnge (DD) records from the National Database
+    of Surface Water (BANDAS) of Mexico. Only works in Windows OS.
     """
-    # TODO: Generalize thie function to read other data sources.
+    # TODO: Read all tables from input_file.
     connection = connect('DRIVER={DRIVER};DBQ={DBQ};PWD={PWD}'.format(
             DRIVER='{Microsoft Access Driver (*.mdb, *.accdb)}',
             DBQ=Path(input_file),
@@ -152,7 +199,7 @@ def read_mdb(input_file):
         time = np.delete(time, indices)
         values = np.delete(values, indices)
 
-    X = xr.Dataset(
+    dataset = xr.Dataset(
             data_vars={'main': (['time'], values)},
             coords={'time': time})
 
@@ -160,4 +207,4 @@ def read_mdb(input_file):
     new_index = np.arange(
             min(time), max(time) + np.timedelta64(1, 'D'),
             np.timedelta64(1, 'D'))
-    return(X.reindex(time=new_index))
+    return(dataset.reindex(time=new_index))
