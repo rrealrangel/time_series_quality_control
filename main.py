@@ -15,7 +15,7 @@ with open('config.toml', 'rb') as fin:
 
 # TODO: Test all .mdb files in a given directory and subdirectories and
 # export a report.
-for input_file in dmgr.list_inputs(settings['general']['input_dir'])[128]:
+for input_file in [dmgr.list_inputs(settings['general']['input_dir'])[2093]]:
     X = dmgr.read_mdb(input_file=input_file)   # Read data.
 
     # Perform tests to raw data.
