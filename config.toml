@@ -1,8 +1,8 @@
 # Configuration file for quality-control.
 
 [general]
-    input_dir='C:/Users/rreal/OneDrive/datasets/imta_bandas/data/corrientes'
-    output_dir='C:/Users/rreal/OneDrive/proyectos/2019/2019-inv-01_cathments-classification/main/analisys/time_series_quality_control/daily_streamflow'
+    input_dir='/home/rrealrangel/MEGA/proyectos/2019/2019-inv-01_cathments-classification/main/analisys/sg30057/precipitation/climatological_stations'
+    output_dir='/home/rrealrangel/MEGA/proyectos/2019/2019-inv-01_cathments-classification/main/analisys/sg30057/precipitation/qc_outputs'
 
 [level_1_tests]
     # Tests performed on raw data.

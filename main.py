@@ -7,7 +7,6 @@ Created on Sun Aug 26 23:30:50 2018
 
 import lib.data_manager as dmgr
 import lib.quality_control_tests as qct
-import numpy as np
 import toml
 
 with open('config.toml', 'rb') as fin:
@@ -15,58 +14,52 @@ with open('config.toml', 'rb') as fin:
 
 # TODO: Test all .mdb files in a given directory and subdirectories and
 # export a report.
-for input_file in dmgr.list_inputs(settings['general']['input_dir'])[128]:
-    X = dmgr.read_mdb(input_file=input_file)   # Read data.
+input_list = dmgr.list_inputs(
+        input_dir=settings['general']['input_dir'],
+        extension='.csv')
 
-    # Perform tests to raw data.
-    if settings['level_1_tests']['gross_range_test']:
-        X['gross_range_test'] = qct.range_test(
-                input_ts=X.main,
-                threshold=4.89164,
-                climatology=False)
+for input_file in input_list:
+    # X = dmgr.read_bandas_file(input_file=input_file)   # From BANDAS.
+    X = dmgr.read_bdcn_file(input_file=input_file)   # From BDCN.
 
-    if settings['level_1_tests']['climatology_test']:
-        X['climatology_test'] = qct.range_test(
-                input_ts=X.main,
-                threshold=4.89164,
-                climatology=True)
+    for var in X.var():
+        # Perform tests to raw data.
+        if settings['level_1_tests']['gross_range_test']:
+            X[var + 'gross_range_test'] = qct.range_test(
+                    input_ts=X[var],
+                    threshold=4.89164,
+                    climatology=False)
 
-    if settings['level_1_tests']['spikes_data_test']:
-        X['spikes_data_test'] = qct.spikes_data_test(
-                input_ts=X.main,
-                threshold=4.89164,
-                climatology=True)
+        if settings['level_1_tests']['climatology_test']:
+            X[var + '_climatology_test'] = qct.range_test(
+                    input_ts=X[var],
+                    threshold=4.89164,
+                    climatology=True)
 
-    if settings['level_1_tests']['change_rate_test']:
-        X['change_rate_test'] = qct.change_rate_test(
-                input_ts=X.main,
-                threshold=4.89164,
-                climatology=True)
+        if settings['level_1_tests']['spikes_data_test']:
+            X[var + '_spikes_data_test'] = qct.spikes_data_test(
+                    input_ts=X[var],
+                    threshold=4.89164,
+                    climatology=True)
 
-    if settings['level_1_tests']['flat_series_test']:
-        X['flat_series_test'] = qct.flat_series_test(
-                input_ts=X.main,
-                value_tolerance=0.0,
-                repetitions_tolerance=2,
-                skipzero=True)
+        if settings['level_1_tests']['change_rate_test']:
+            X[var + '_change_rate_test'] = qct.change_rate_test(
+                    input_ts=X[var],
+                    threshold=4.89164,
+                    climatology=True)
 
-    if settings['level_1_tests']['tmp_outlier_test']:
-        X['tmp_outlier_test'] = qct.tmp_outlier_test(
-                input_ts=X.main,
-                c=7.5,
-                threshold=4.89164)
+        if settings['level_1_tests']['flat_series_test']:
+            X[var + '_flat_series_test'] = qct.flat_series_test(
+                    input_ts=X[var],
+                    value_tolerance=0.0,
+                    repetitions_tolerance=2,
+                    skipzero=True)
 
-    tests = [i for i in X.var() if i != 'main']
-    X['missing_suspect_value'] = X[tests[0]]
+        if settings['level_1_tests']['tmp_outlier_test']:
+            X[var + '_tmp_outlier_test'] = qct.tmp_outlier_test(
+                    input_ts=X[var],
+                    c=7.5,
+                    threshold=4.89164)
 
-    for test in tests:
-        # TODO: Tag as suspicious only if it is results as an outlier in
-        # two of the following tests: climatological test, peak test, and
-        # change rate test.
-        X['missing_suspect_value'] = (X['missing_suspect_value'] | X[test])
-
-    X['main_filtered'] = X.main.copy()
-    X.main_filtered[X['missing_suspect_value']] = np.nan
-    output_subdir = dmgr.load_dir(
-            settings['general']['output_dir'] + '/rh' + input_file.stem[:2])
-    X.to_netcdf(output_subdir / (input_file.stem + '.nc'))
+    X.to_netcdf(settings['general']['output_dir'] +
+                '/' + input_file.stem + '.nc')
