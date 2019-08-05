@@ -1,0 +1,14 @@
+# Configuration file for quality-control.
+
+[general]
+    input_dir='/media/realrangel/AREAL TURBO/datasets/smn_base_de_datos_climatologica/v2018.06/data'
+    output_dir='/home/realrangel/MEGA/proyectos/2019/2019-inv-01_cathments-classification/main/analisys/time_series_quality_control/bdcn' 
+
+[level_1_tests]
+    # Tests performed on raw data.
+    gross_range_test = false
+    climatology_test = true
+    spikes_data_test = false
+    change_rate_test = true
+    flat_series_test = true
+    tmp_outlier_test = false
