@@ -1,1 +1,3 @@
 time_series_quality_control
+Dependencies
+- pathlib2
